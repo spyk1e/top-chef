@@ -12,59 +12,68 @@ app.get('/scrape', function (req, res) {
     url2star = 'https://restaurant.michelin.fr/restaurants/france/restaurants-michelin/restaurants-2-etoiles-michelin/page-'; //5 pages
     url3star = 'https://restaurant.michelin.fr/restaurants/france/restaurants-michelin/restaurants-3-etoiles-michelin/page-'; //2 pages
     */
-    
+
     var listTitle = [];
+    var listUrlMich = [];
+    var listJson = [];
 
     for (var i = 1; i < 36; i++) {
 
         var urli = url + i;
         request(urli, function (error, response, html) {
 
-            console.log(urli);
-
-
+            //console.log(urli);
 
             if (!error) {
                 var $ = cheerio.load(html);
 
-                var title, release, rating;
 
 
-
-                //Get title restaurant
-                $('.poi_card-display-title').filter(function () {
+                //Get restaurant
+                $('.view-mode-poi_card').filter(function () {
                     var json = {
-                        id_Mich: "",
-                        id_LaFour: "",
+                        //id_Mich: "",
+                        //id_LaFour: "",
                         title: "",
-                        chef: "",
-                        stars: "",
+                        urlMich: "", //"https://restaurant.michelin.fr",
+                        urlLaFourch: "",
+                        //chef: "",
+                        //stars: "",
                         adress: "",
-                        lat: "",
-                        lon: ""
+                        zipCode: ""
                     };
-                    var data = $(this);
-                    title = data.text().trim();
+
+
+                    var resto = $(this);
+                    var urlMich = "https://restaurant.michelin.fr" + resto.children().attr('href');
+                    var title = resto.attr('attr-gtm-title');
+                    console.log(title);
+                    //resto.children().next().children().children().next().text().trim();
+
+                    //Put this restaurant in the json
+                    json.urlMich = urlMich;
                     json.title = title;
-                    listTitle.push(json);
+                    listJson.push(json);
                 })
+
             }
 
+            res.end();
 
             //Output on Json
-            fs.writeFile('Michelin.json', JSON.stringify(listTitle, null, 4), function (err) {
-                console.log('File successfully written! - Check your project directory for the output.json file');
-                console.log(listTitle);
+            fs.writeFile('Michelin.json', JSON.stringify(listJson, null, 4), function (err) {
+                console.log('File successfully written! - Check your project directory for the Michelin.json file');
+                //console.log(listJson);
             })
-
-
-
-
-            res.end();
         })
+
+
+
     }
+
+
 })
 
-app.listen('8081')
+app.listen('8081');
 console.log('Magic happens on port 8081');
 exports = module.exports = app;
