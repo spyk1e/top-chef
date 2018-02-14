@@ -18,51 +18,50 @@ var listUrlMich = [];
 var listJson = [];
 
 
-function ScrapeTitleUrl(req, res, callback) {
+function ScrapeTitleUrl(req, res, i, callback) {
 
     url = 'https://restaurant.michelin.fr/restaurants/france/restaurants-michelin/restaurants-1-etoile-michelin/restaurants-2-etoiles-michelin/restaurants-3-etoiles-michelin/page-';
 
-    for (var i = 1; i < 35; i++) {
 
-        var urli = url + i;
-        request(urli, function (error, response, html) {
+    var urli = url + i;
+    request(urli, function (error, response, html) {
 
-            //console.log(urli);
+        //console.log(urli);
 
-            if (!error) {
-                var $ = cheerio.load(html);
+        if (!error) {
+            var $ = cheerio.load(html);
 
-                //Get restaurant
-                $('.view-mode-poi_card').filter(function () {
-                    var json = {
-                        title: "",
-                        urlMich: "",
-                        urlLaFourch: "",
-                        adress: "",
-                        zipCode: ""
-                    };
-                    //Get title and url
-                    var resto = $(this);
-                    var urlMich = "https://restaurant.michelin.fr" + resto.children().attr('href');
-                    var title = resto.attr('attr-gtm-title');
+            //Get restaurant
+            $('.view-mode-poi_card').filter(function () {
+                var json = {
+                    title: "",
+                    urlMich: "",
+                    urlLaFourch: "",
+                    adress: "",
+                    zipCode: ""
+                };
+                //Get title and url
+                var resto = $(this);
+                var urlMich = "https://restaurant.michelin.fr" + resto.children().attr('href');
+                var title = resto.attr('attr-gtm-title');
 
-                    //Put this restaurant in the json
-                    json.urlMich = urlMich;
-                    json.title = title;
-                    listJson.push(json);
-                })
-            }
-
-            res.end();
-
-            
-            //Output on Json
-            fs.writeFile('Michelin.json', JSON.stringify(listJson, null, 4), function (err) {
-                console.log('File successfully written! - Check your project directory for the Michelin.json file');
+                //Put this restaurant in the json
+                json.urlMich = urlMich;
+                json.title = title;
+                listJson.push(json);
             })
-            
+        }
+
+        res.end();
+
+        /*
+        //Output on Json
+        fs.writeFile('Michelin.json', JSON.stringify(listJson, null, 4), function (err) {
+            console.log('File successfully written! - Check your project directory for the Michelin.json file');
         })
-    }
+        */
+    })
+
 
     console.log(listJson);
 
@@ -80,37 +79,46 @@ function ScrapeZip(listUrlMich) {
 }
 */
 
+/*
 function ScrapeZip(req, res) {
 
-    ScrapeTitleUrl(req, res, function (listJson) {
+    for (var i = 1; i < 35; i++) {
 
-        console.log(listJson);
+        ScrapeTitleUrl(req, res, i, function (listJson) {}
+            console.log(listJson);
 
-        //Output on Json
-        fs.writeFile('Michelin.json', JSON.stringify(listJson, null, 4), function (err) {
-            console.log('File successfully written! - Check your project directory for the Michelin.json file');
-        })
+            //Output on Json
+            fs.writeFile('Michelin.json', JSON.stringify(listJson, null, 4), function (err) {
+                console.log('File successfully written! - Check your project directory for the Michelin.json file');
+            })
 
-        console.log('sec funct');
-        //Open the json to add the zipcode of every restaurant
-        var nbRestMich = listUrlMich.length;
-        console.log(nbRestMich);
-    });
-}
+            console.log('sec funct');
+            //Open the json to add the zipcode of every restaurant
+            var nbRestMich = listUrlMich.length; console.log(nbRestMich);
+        });
+}*/
 
 
 app.get('/scrape', function (req, res) {
 
 
-    ScrapeZip(req, res);
+    for (var i = 1; i < 35; i++) {
+
+        ScrapeTitleUrl(req, res, i, function (listJson) {
+            //Output on Json
+            fs.writeFile('Michelin.json', JSON.stringify(listJson, null, 4), function (err) {
+                console.log('File successfully written! - Check your project directory for the Michelin.json file');
+            })
+        });
+    }
 
     /*
-    var listUrlMich = ScrapeTitleUrl(req, res);
+        var listUrlMich = ScrapeTitleUrl(req, res);
 
-    sleep(10000);
+        sleep(10000);
 
-    ScrapeZip(listUrlMich);
-*/
+        ScrapeZip(listUrlMich);
+    */
 
 
 
