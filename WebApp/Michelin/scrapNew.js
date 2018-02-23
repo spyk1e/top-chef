@@ -13,6 +13,7 @@ var listZipMich = [];
 urlp = 'https://restaurant.michelin.fr/restaurants/france/restaurants-michelin/restaurants-1-etoile-michelin/restaurants-2-etoiles-michelin/restaurants-3-etoiles-michelin/page-';
 
 
+
 function sleep(milliseconds) {
     var start = new Date().getTime();
     while (true) {
@@ -55,11 +56,7 @@ function ScrapeTitleUrl(req, res, i, callback) {
                 //console.log(listJson);;
             });
         }
-
-
     })
-
-
 }
 
 function GetTitleUrlMichelin($, callback) {
@@ -85,7 +82,6 @@ function GetTitleUrlMichelin($, callback) {
     })
 
     callback();
-
 }
 
 function WriteJson(callback) {
@@ -104,16 +100,15 @@ function MichelinDetailsLoop(req, res, callback) {
         urli = listUrlMich[i];
         ScrapeMichelinDetails(req, res, urli, function () {
             //console.log("get details fin");
-            WriteMichelinDetails(function () {
+            /*WriteMichelinDetails(function () {
                 console.log("Details Writed");
-            });
-            callback(i);
+            });*/
+            callback();
         });
     }
 }
 
 function ScrapeMichelinDetails(req, res, url, callback) {
-
     const configuration = {
         'uri': url,
         'headers': {
@@ -122,8 +117,12 @@ function ScrapeMichelinDetails(req, res, url, callback) {
     };
 
     request(configuration, (err, response, html) => {
-
         //console.log(url);
+        if (html == undefined) {
+            ScrapeMichelinDetails(req, res, url, function () {
+                callback();
+            })
+        }
 
         if (!err) {
             var $ = cheerio.load(html);
@@ -140,6 +139,7 @@ function ScrapeMichelinDetails(req, res, url, callback) {
 
 function GetMichelinDetails($, url, callback) {
     //Get details
+
     $('.poi_intro-description').filter(function () {
         var michDetails = {
             title: "",
@@ -151,8 +151,6 @@ function GetMichelinDetails($, url, callback) {
             mich_url: url
         };
 
-
-
         //Get details
         var resto = $(this);
         var title = resto.children().next().first().text().trim();
@@ -161,13 +159,17 @@ function GetMichelinDetails($, url, callback) {
         var adress = resto.children().children().next().next().next().text().trim();
 
         //Put this restaurant in the json
+        //console.log(url);
+
+
         //console.log(title + " " + adress + " " + " " + zipCode + " " + city + " " + url);
-        listZipMich.push(zipCode);
         michDetails.adress = adress;
         michDetails.title = title;
         michDetails.zipCode = zipCode;
         michDetails.city = city;
+        listZipMich.push(zipCode);
         listJsonMichDet.push(michDetails);
+
     })
 
     callback();
@@ -180,7 +182,6 @@ function WriteMichelinDetails(callback) {
         callback();
     })
 }
-
 
 
 app.get('/scrape', function (req, res) {
@@ -201,25 +202,25 @@ app.get('/scrape', function (req, res) {
         if (listUrlMich.length == 615) { //When we get all the urls
 
             console.log("Michelin URL acquired");
-            console.log(listUrlMich);
-            
-            fs.writeFile('URL.txt', listUrlMich);
+            //console.log(listUrlMich);
 
             WriteJson(function () {
-                console.log("Write");
+                //console.log("Write");
             });
 
-            console.log("in loop:" + listUrlMich.length);
+            //console.log("in loop:" + listUrlMich.length);
 
             //console.log(listUrlMich);
             res.write("\nlist lenght: " + listUrlMich.length.toString());
 
-            MichelinDetailsLoop(req, res, function (iUrlVisited) {
-                console.log(listUrlMich[listZipMich.length]);
-                console.log(listZipMich.length + "/615");
-                if (listZipMich.length == 615) {
+            MichelinDetailsLoop(req, res, function () {
+                //console.log(listUrlMich[listZipMich.length]);
+                console.log(listJsonMichDet.length + "/" + listUrlMich.length);
+
+
+                if (listJsonMichDet.length == listUrlMich.length) {
                     WriteMichelinDetails(function () {
-                        console.log("Details Writed");
+                        console.log("Details Writed End");
                     });
                 }
             })
