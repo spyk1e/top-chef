@@ -36,7 +36,7 @@
         "mich_url": "https://restaurant.michelin.fr/2ab5qlx/alleno-paris-au-pavillon-ledoyen-paris-08"
     },
     {
-        "title": "Le Neuvième Art",
+        "title": "  Le Neuvième Art",
         "adress": "",
         "zipCode": "69006",
         "city": "Lyon",
@@ -3746,7 +3746,7 @@
     {
         "title": "JAN",
         "adress": "",
-        "zipCode": "06000",
+        "zipCode": "06300",
         "city": "Nice",
         "locality": "",
         "country": "",

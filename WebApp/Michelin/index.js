@@ -12,8 +12,6 @@ var listZipMich = [];
 var listJsonLafourchette = [];
 urlp = 'https://restaurant.michelin.fr/restaurants/france/restaurants-michelin/restaurants-1-etoile-michelin/restaurants-2-etoiles-michelin/restaurants-3-etoiles-michelin/page-';
 
-
-
 function sleep(milliseconds) {
     var start = new Date().getTime();
     while (true) {
@@ -23,9 +21,13 @@ function sleep(milliseconds) {
     }
 }
 
+//GENERAL
+app.get('/', function (req, res) {
+    res.sendFile(path.join(__dirname + 'index.html'));
+});
+
 
 ///MICHELIN
-
 //Get urls of restaurant on michelin
 function MichelinLoop(req, res, callback) {
     for (var i = 1; i < 36; i++) {
@@ -67,9 +69,6 @@ function GetTitleUrlMichelin($, callback) {
         var json = {
             title: "",
             urlMich: "",
-            urlLaFourch: "",
-            adress: "",
-            zipCode: ""
         };
         //Get title and url
         var resto = $(this);
@@ -145,11 +144,8 @@ function GetMichelinDetails($, url, callback) {
     $('.poi_intro-description').filter(function () {
         var michDetails = {
             title: "",
-            adress: "",
             zipCode: "",
             city: "",
-            locality: "",
-            country: "",
             mich_url: url
         };
 
@@ -194,26 +190,15 @@ app.get('/GetMichelin', function (req, res) {
 
 
     MichelinLoop(req, res, function (i) {
+        console.log(listUrlMich.length);
 
-        //console.log("\ni: " + i.toString());
-        //console.log(listUrlMich.length);
-        /*
-        if (nbJsonWrited == 34) {
-            res.write("\n\n\n" + nbJsonWrited.toString());
-        */
         if (listUrlMich.length == 613) { //When we get all the urls
 
             console.log("Michelin URL acquired");
-            //console.log(listUrlMich);
 
-            WriteJson(function () {
-                //console.log("Write");
+            /*WriteJson(function () {
             });
-
-            //console.log("in loop:" + listUrlMich.length);
-
-            //console.log(listUrlMich);
-            res.write("\nlist lenght: " + listUrlMich.length.toString());
+            */
 
             MichelinDetailsLoop(req, res, function () {
                 //console.log(listUrlMich[listZipMich.length]);
@@ -232,17 +217,17 @@ app.get('/GetMichelin', function (req, res) {
 
 
 ///LAFOURCHETTE
+//Match restaurants
 function GetMichelinJsonInfos(callback) {
     fs.readFile('MichelinDetails.json', 'utf8', function (err, data) {
         if (err) throw err;
         var MichelinList = [];
-        for (var attributename in JSON.parse(data)) {
-            MichelinList.push(JSON.parse(data)[attributename]);
+        for (var restaurant in JSON.parse(data)) {
+            MichelinList.push(JSON.parse(data)[restaurant]);
         }
         callback(MichelinList);
     });
 };
-
 
 //Check infos on lafourchette and get ids
 function LafourchetteLoop(req, res, MichelinList, callback) {
@@ -261,84 +246,88 @@ function ScrapeLafourchette(req, res, restaurant, callback) {
 
     console.log(url);
     request(url, function (error, response, html) {
+        if (html == undefined) {
+            ScrapeLafourchette(req, res, restaurant, function () {
+                callback();
+            })
+        }
+
         if (!error && response.statusCode == 200) {
-            var $ = cheerio.load(html);
-
-
-            GetLafourchetteId($, restaurant, function () {
-
+            GetLafourchetteId(html, restaurant, function () {
                 callback();
             });
         }
     })
 }
 
-function GetLafourchetteId($, restaurant, callback) {
-    console.log("get lafourche");
-    //$('.word-wrap').filter(function () {
+function GetLafourchetteId(html, restaurant, callback) {
+    var lafourchetteSearchJSON = JSON.parse(html);
+    //console.log(lafourchetteSearchJSON);
+
+    for (var searchResult in lafourchetteSearchJSON) {
         var lafourchDetails = {
-            id: "",
+            id: lafourchetteSearchJSON[searchResult].id,
             title: restaurant.title,
-            adress: restaurant.adress,
-            zipCode: "",
-            city: restaurant.city,
+            address: restaurant.address,
+            zipCode: lafourchetteSearchJSON[searchResult].address.postal_code,
+            city: lafourchetteSearchJSON[searchResult].address.address_locality,
         };
 
-
-
-        //Get details
-        var resto = $(this);
-        var id = resto;
-        var zipCode = resto;
-
-        console.log(resto);
-
-        //Verify if the zipCode is correct
-        if (zipCode == restaurant.zipCode) {
+        //Verify if the zipCode or city is correct
+        if ((lafourchDetails.zipCode == restaurant.zipCode) || (lafourchDetails.city == restaurant.city)) {
             //Put this restaurant in the json
-            //console.log(title + " " + adress + " " + " " + zipCode + " " + city + " " + url);
-            lafourchDetails.id = id;
-            lafourchDetails.zipCode = zipCode;
             listJsonLafourchette.push(lafourchDetails);
         }
-
-
-    //})
-
+    }
     callback();
 }
-
 
 function WriteLaFourchette(callback) {
     //Output on Json            
     fs.writeFile('Lafourchette.json', JSON.stringify(listJsonLafourchette, null, 4), function (err) {
-        console.log('File successfully written! - Check your project directory for the Lafourchette.json file');
         callback();
     })
 }
 
 app.get('/GetLaFourchette', function (req, res) {
-
     res.write("Start");
-    console.log("start");
+    console.log("Start matching restaurants");
 
     GetMichelinJsonInfos(function (MichelinList) {
         console.log(MichelinList.length);
 
-        LafourchetteLoop(req, res, MichelinList, function () {
+        LafourchetteLoop(req, res, MichelinList, function (nbRestChecked) {
+            console.log("Restaurant matched: " + listJsonLafourchette.length + "/" + MichelinList.length);
 
-            //console.log("La Fourchette & Michelin matched");
+            if (listJsonLafourchette.length >= 230) {
+                setTimeout(function () {
+                    console.log('\033[2J');
 
-            if (listUrlMich.length == 613) { //When we get all the urls
+                    console.log("Matching finished")
+                    console.log("Restaurant matched: " + listJsonLafourchette.length);
 
-
-                //console.log(listUrlMich);
-
-                //WriteJson(function () {
-                //console.log("Write");
-            };
+                    WriteLaFourchette(function () {}, 10000); // Adjust delay if it's too short
+                });
+            }
         });
     });
+});
+
+///Check promotions
+function GetLafourchetteInfos(callback){
+    fs.readFile('Lafourchette.json', 'utf8', function (err, data) {
+        if (err) throw err;
+        var LafourchetteList = [];
+        for (var restaurant in JSON.parse(data)) {
+            LafourchetteList.push(JSON.parse(data)[restaurant]);
+        }
+        callback(MichelinList);
+    });
+    
+}
+
+app.get('/Promo', function (req, res) {
+
 });
 
 
