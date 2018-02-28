@@ -10,6 +10,7 @@ var listJson = [];
 var listJsonMichDet = [];
 var listZipMich = [];
 var listJsonLafourchette = [];
+var listJsonPromo = [];
 urlp = 'https://restaurant.michelin.fr/restaurants/france/restaurants-michelin/restaurants-1-etoile-michelin/restaurants-2-etoiles-michelin/restaurants-3-etoiles-michelin/page-';
 
 function sleep(milliseconds) {
@@ -96,11 +97,10 @@ function WriteJson(callback) {
 
 //Get details on each michelin restaurant
 function MichelinDetailsLoop(req, res, callback) {
-    //console.log("\nMichDetLoopStart");
     for (var i = 0; i < listUrlMich.length; i++) {
         urli = listUrlMich[i];
         ScrapeMichelinDetails(req, res, urli, function () {
-            //console.log("get details fin");
+            console.log("get details fin");
             /*WriteMichelinDetails(function () {
                 console.log("Details Writed");
             });*/
@@ -154,14 +154,8 @@ function GetMichelinDetails($, url, callback) {
         var title = resto.children().next().first().text().trim();
         var zipCode = resto.children().next().next().children().children().children().children().next().children().first().text().trim();
         var city = resto.children().next().next().children().children().children().children().next().children().first().next().text().trim();
-        var adress = resto.children().children().next().next().next().text().trim();
 
         //Put this restaurant in the json
-        //console.log(url);
-
-
-        //console.log(title + " " + adress + " " + " " + zipCode + " " + city + " " + url);
-        michDetails.adress = adress;
         michDetails.title = title;
         michDetails.zipCode = zipCode;
         michDetails.city = city;
@@ -196,9 +190,8 @@ app.get('/GetMichelin', function (req, res) {
 
             console.log("Michelin URL acquired");
 
-            /*WriteJson(function () {
-            });
-            */
+            WriteJson(function () {});
+
 
             MichelinDetailsLoop(req, res, function () {
                 //console.log(listUrlMich[listZipMich.length]);
@@ -219,7 +212,7 @@ app.get('/GetMichelin', function (req, res) {
 ///LAFOURCHETTE
 //Match restaurants
 function GetMichelinJsonInfos(callback) {
-    fs.readFile('MichelinDetails.json', 'utf8', function (err, data) {
+    fs.readFile('MichelinDetails-Base.json', 'utf8', function (err, data) {
         if (err) throw err;
         var MichelinList = [];
         for (var restaurant in JSON.parse(data)) {
@@ -262,7 +255,6 @@ function ScrapeLafourchette(req, res, restaurant, callback) {
 
 function GetLafourchetteId(html, restaurant, callback) {
     var lafourchetteSearchJSON = JSON.parse(html);
-    //console.log(lafourchetteSearchJSON);
 
     for (var searchResult in lafourchetteSearchJSON) {
         var lafourchDetails = {
@@ -314,19 +306,115 @@ app.get('/GetLaFourchette', function (req, res) {
 });
 
 ///Check promotions
-function GetLafourchetteInfos(callback){
-    fs.readFile('Lafourchette.json', 'utf8', function (err, data) {
+function GetLafourchetteJSONInfos(callback) {
+    fs.readFile('LafourchetteCleaned.json', 'utf8', function (err, data) {
         if (err) throw err;
-        var LafourchetteList = [];
+        var lafourchetteList = [];
         for (var restaurant in JSON.parse(data)) {
-            LafourchetteList.push(JSON.parse(data)[restaurant]);
+            lafourchetteList.push(JSON.parse(data)[restaurant]);
         }
-        callback(MichelinList);
+        callback(lafourchetteList);
     });
-    
+}
+
+function PromoLoop(req, res, lafourchetteList, callback) {
+    for (var i = 1; i < lafourchetteList.length; i++) {
+        var restaurant = lafourchetteList[i];
+        ScrapePromo(req, res, restaurant, function () {
+
+            callback(i);
+        });
+    }
+}
+
+function ScrapePromo(req, res, restaurant, callback) {
+    var url = "https://m.lafourchette.com/api/restaurant/" + restaurant.id + "/sale-type";
+
+    console.log(url);
+    console.log(restaurant.title);
+    request(url, function (error, response, html) {
+        if (html == undefined) {
+            ScrapePromo(req, res, restaurant, function () {
+                callback();
+            })
+        }
+
+        if (!error && response.statusCode == 200) {
+            GetPromo(html, restaurant, function () {
+                callback();
+            });
+        }
+    })
+}
+
+function GetPromo(html, restaurant, callback) {
+    var lafourchettePromoJSON = JSON.parse(html);
+
+    //Verify if promo
+    for (var iMenu in lafourchettePromoJSON) {
+        if (lafourchettePromoJSON[iMenu].is_special_offer == true) {
+
+            var lafourchettePromo = {
+                id: restaurant.id,
+                title: restaurant.title,
+                address: restaurant.address,
+                zipCode: restaurant.zipCode,
+                city: restaurant.city,
+                promo: "true",
+                menu: lafourchettePromoJSON[iMenu].title,
+            };
+
+            //Put this restaurant in the json
+            listJsonPromo.push(lafourchettePromo);
+
+            console.log(lafourchettePromo.id);
+        }
+    }
+    callback();
+}
+
+function WritePromo(callback) {
+    //Output on Json            
+    fs.writeFile('Promo.json', JSON.stringify(listJsonPromo, null, 4), function (err) {
+        console.log("JSON file with promos writed");
+        callback();
+    })
+}
+
+function DisplayDeals(req, res) {
+    for (var i in listJsonPromo) {
+        res.write("\n" + listJsonPromo[i].id);
+    }
 }
 
 app.get('/Promo', function (req, res) {
+    console.log("Start promo checking");
+
+    GetLafourchetteJSONInfos(function (lafourchetteList) {
+
+        PromoLoop(req, res, lafourchetteList, function () {
+
+            console.log('\033[2J');
+            console.log("Restaurant with deals: " + listJsonPromo.length + "/" + lafourchetteList.length);
+
+            /*
+            WritePromo(function () {
+                console.log(listJsonPromo.length + "deals found");
+                console.log("Watch webpage");
+                DisplayDeals(req, res);
+            })
+            */
+        })
+    })
+    setTimeout(function () {
+        console.log('\033[2J');
+
+        WritePromo(function () {
+            console.log(listJsonPromo.length + "deals found");
+            console.log("Watch webpage");
+            DisplayDeals(req, res);
+        })
+    }, 10000); // Adjust delay if it's too short
 
 });
 

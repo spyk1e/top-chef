@@ -960,12 +960,6 @@
         "city": "Tinqueux"
     },
     {
-        "id": "23454",
-        "title": "Helen",
-        "zipCode": "75008",
-        "city": "Paris"
-    },
-    {
         "id": "36039",
         "title": "Helen",
         "zipCode": "75006",
@@ -1111,12 +1105,6 @@
     },
     {
         "id": "3521",
-        "title": "Le Candille",
-        "zipCode": "06250",
-        "city": "Mougins"
-    },
-    {
-        "id": "26746",
         "title": "Le Candille",
         "zipCode": "06250",
         "city": "Mougins"
