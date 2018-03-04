@@ -24,6 +24,11 @@
     padding-top: 20px;
 }
 
+.badpage {
+    color: royalblue;
+    text-decoration: none;
+}
+
 a {
     color: white;
     text-decoration: none;
@@ -63,7 +68,7 @@ h2 {
     padding: 20px 4%;
 }
 
-.geo{
+.geo {
     color: royalblue;
 }
 

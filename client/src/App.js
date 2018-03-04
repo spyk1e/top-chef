@@ -74,6 +74,7 @@ class App extends Component {
     </header>
           <div className="loading">
     <h1><p>Loading restaurants ...</p></h1>
+          <h2><p>If it's too long, come back from the <a className="badpage" href="http://localhost:5000/top-chef">localhost:5000</a> </p> </h2>
           </div>
 </div>
       );
