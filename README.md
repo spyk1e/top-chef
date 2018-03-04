@@ -9,24 +9,12 @@
 - [Licence](#licence)
 
 ## Install
-- On root folder: 
-'''npm 
-npm install
-'''
-- On client folder: 
-''' 
-yarn
-'''
+- On root folder: npm install
+- On client folder: yarn
 
 ## Launch
-- On root folder: 
-'''node 
-node server.js
-'''
-- On client folder: 
-'''
-yarn start
-'''
+- On root folder: node server.js
+- On client folder: yarn start
 
 ## Licence
 
