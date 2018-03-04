@@ -1,0 +1,30 @@
+.top {
+    background-color: #666;
+    padding: 15px;
+    color: white;
+    margin: -10px;
+    font-size: 2.5em;
+}
+
+.uty {
+    border: 20px;
+
+}
+
+h2 {
+    font-size: 2em;
+}
+
+p {}
+
+a {
+    background-color: lightgray;
+    border-radius: 5px;
+    padding: 5px;
+    margin-left: 20px;
+    border: 15px;
+    font-size: 1.4em;
+
+    color: royalblue;
+    text-decoration: none;
+}

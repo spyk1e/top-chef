@@ -34,6 +34,10 @@ app.get('/', function (req, res) {
     res.sendFile(path.join(__dirname + '/index.html'));
 });
 
+app.get('/iCSS', function (req, res) {
+    res.sendFile(path.join(__dirname + '/index.css'));
+});
+
 
 ///MICHELIN
 //Get urls of restaurant on michelin
