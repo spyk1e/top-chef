@@ -15,6 +15,7 @@
 ## Launch
 - On root folder: node server.js
 - On client folder: yarn start
+- Open browser on localhost:5000 to choose the action
 
 ## Licence
 
