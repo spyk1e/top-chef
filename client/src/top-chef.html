@@ -1,0 +1,30 @@
+<div className="App">
+    <header className="App-header">
+        <img src={logo} className="App-logo" alt="logo" />
+        <h1 className="App-title">Stared deals</h1>
+    </header>
+    <h1>Stared restaurants with deals:</h1>
+    <div className="restaurant-list">
+        {this.state.response.sort(function(a,b){return parseInt(b.zipCode) - parseInt(a.zipCode);}).map((restaurant, index) => (
+        <div className="card">
+            <a target="_blank" href={restaurant.url_LF}>
+                <div className="restaurant">
+
+                    <div>
+                        <h2>{restaurant.title}</h2>
+                        <p className="Menu">{restaurant.menu}</p>
+                    </div>
+
+
+                    <a target="_blank" href={restaurant.url_map}>
+                        <div className="geo">
+                            <p>{restaurant.city}, {restaurant.zipCode}</p>
+                        </div>
+                    </a>
+                </div>
+            </a>
+
+        </div>
+        ))}
+    </div>
+</div>

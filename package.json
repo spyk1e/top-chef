@@ -1,0 +1,36 @@
+{
+    "name": "top-chef",
+    "version": "1.0.0",
+    "description": "Show discounts of stared restaurants",
+    "author": {
+        "name": "Abondance Nathan"
+    },
+    "license": "MIT",
+    "scripts": {
+        "client": "cd client && yarn start",
+        "server": "nodemon server.js",
+        "dev": "concurrently --kill-others-on-fail \"yarn server\" \"yarn client\""
+    },
+    "dependencies": {
+        "cheerio": "^1.0.0-rc.2",
+        "express": "^4.16.2",
+        "nodemon": "^1.17.1",
+        "open": "0.0.5",
+        "path": "^0.12.7",
+        "request": "^2.83.0",
+        "yarn": "^1.5.1"
+    },
+    "devDependencies": {
+        "concurrently": "^3.5.0"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/spyk1e/top-chef.git"
+    },
+    "keywords": [
+        "node",
+        "express",
+        "michelin",
+        "lafourchette"
+    ]
+}
